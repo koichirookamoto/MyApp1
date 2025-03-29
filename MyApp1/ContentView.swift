@@ -11,12 +11,13 @@ import PhotosUI
 struct StarRatingView: View {
     @Binding var rating: Int
     let maxRating: Int = 5
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         HStack {
             ForEach(1...maxRating, id: \.self) { star in
                 Image(systemName: star <= rating ? "star.fill" : "star")
-                    .foregroundColor(star <= rating ? .yellow : .gray)
+                    .foregroundColor(star <= rating ? .yellow : colorScheme == .dark ? .gray.opacity(0.7) : .gray)
                     .font(.title)
                     .onTapGesture {
                         rating = star
@@ -34,6 +35,7 @@ struct ReviewFormView: View {
     @State private var isShowingImagePicker = false
     @State private var isShowingCamera = false
     @State private var imageSelection: PhotosPickerItem?
+    @Environment(\.colorScheme) private var colorScheme
     
     var body: some View {
         NavigationStack {
@@ -54,7 +56,7 @@ struct ReviewFormView: View {
                             .frame(minHeight: 100)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
-                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                                    .stroke(colorScheme == .dark ? Color.gray.opacity(0.4) : Color.gray.opacity(0.2), lineWidth: 1)
                             )
                     }
                     .padding(.vertical, 4)
@@ -111,7 +113,7 @@ struct ReviewFormView: View {
                             .foregroundColor(.white)
                     }
                     .padding()
-                    .background(Color.blue)
+                    .background(colorScheme == .dark ? Color.blue.opacity(0.8) : Color.blue)
                     .cornerRadius(8)
                     .buttonStyle(PlainButtonStyle())
                 }
@@ -125,7 +127,7 @@ struct ReviewFormView: View {
                 Text("Camera would open here")
                     .padding()
             }
-            .onChange(of: imageSelection) { _ in
+            .onChange(of: imageSelection) { 
                 loadTransferable(from: imageSelection)
             }
         }

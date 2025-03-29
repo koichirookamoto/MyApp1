@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct MyApp1App: App {
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(nil) // This ensures the app follows the system color scheme
         }
     }
 }
