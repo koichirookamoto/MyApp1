@@ -6,9 +6,10 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct StarRatingView: View {
-    @State private var rating: Int = 0
+    @Binding var rating: Int
     let maxRating: Int = 5
     
     var body: some View {
@@ -25,16 +26,124 @@ struct StarRatingView: View {
     }
 }
 
+struct ReviewFormView: View {
+    @State private var name: String = ""
+    @State private var description: String = ""
+    @State private var rating: Int = 0
+    @State private var selectedImage: UIImage?
+    @State private var isShowingImagePicker = false
+    @State private var isShowingCamera = false
+    @State private var imageSelection: PhotosPickerItem?
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(header: Text("Your Information")) {
+                    VStack(alignment: .leading) {
+                        Text("Name")
+                            .font(.headline)
+                        TextField("Enter your name", text: $name)
+                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                    }
+                    .padding(.vertical, 4)
+                    
+                    VStack(alignment: .leading) {
+                        Text("Description")
+                            .font(.headline)
+                        TextEditor(text: $description)
+                            .frame(minHeight: 100)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                            )
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                Section(header: Text("Rating")) {
+                    VStack(alignment: .center) {
+                        Text("How would you rate your experience?")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                        StarRatingView(rating: $rating)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                Section(header: Text("Add Photo")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Add an image to your review")
+                            .font(.headline)
+                        
+                        if let image = selectedImage {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(maxHeight: 200)
+                                .cornerRadius(8)
+                        }
+                        
+                        HStack {
+                            Button {
+                                isShowingImagePicker = true
+                            } label: {
+                                Label("Photo Library", systemImage: "photo")
+                            }
+                            
+                            Button {
+                                isShowingCamera = true
+                            } label: {
+                                Label("Camera", systemImage: "camera")
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                
+                Section {
+                    Button {
+                        // Submit form logic would go here
+                        print("Review submitted: \(name), \(description), Rating: \(rating)")
+                    } label: {
+                        Text("Submit Review")
+                            .frame(maxWidth: .infinity)
+                            .foregroundColor(.white)
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .cornerRadius(8)
+                    .buttonStyle(PlainButtonStyle())
+                }
+            }
+            .navigationTitle("Write a Review")
+            .sheet(isPresented: $isShowingImagePicker) {
+                PhotosPicker("Select a photo", selection: $imageSelection, matching: .images)
+            }
+            .sheet(isPresented: $isShowingCamera) {
+                // In a real app, you would implement camera functionality here
+                Text("Camera would open here")
+                    .padding()
+            }
+            .onChange(of: imageSelection) { _ in
+                loadTransferable(from: imageSelection)
+            }
+        }
+    }
+    
+    private func loadTransferable(from imageSelection: PhotosPickerItem?) {
+        Task {
+            if let data = try? await imageSelection?.loadTransferable(type: Data.self),
+               let uiImage = UIImage(data: data) {
+                selectedImage = uiImage
+            }
+        }
+    }
+}
+
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Text("Rate your experience")
-                .font(.headline)
-                .padding(.bottom)
-            
-            StarRatingView()
-        }
-        .padding()
+        ReviewFormView()
     }
 }
 
